@@ -1,0 +1,16 @@
+# Python virtual environments
+env/
+venv/
+.venv/
+django-web-linux/
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+
+# VSCode / PyCharm / Editor settings
+.vscode/
+.idea/
+
+# Environment / config files
+*.env

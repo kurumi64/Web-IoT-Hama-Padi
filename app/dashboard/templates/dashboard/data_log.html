@@ -1,0 +1,548 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Data Log - Monitoring Alat Hama</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="" name="keywords">
+    <meta content="" name="description">
+    <link href="{% static 'img/favicon.ico'%}" rel="icon">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@500;700&display=swap" rel="stylesheet"> 
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{% static 'lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
+    <link href="{% static 'lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container-fluid position-relative d-flex p-0">
+        
+        <!-- Spinner Start -->
+        <div id="spinner" class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <!-- Spinner End -->
+
+        <!-- Sidebar Start -->
+        <div class="sidebar pe-4 pb-3">
+            <nav class="navbar bg-secondary navbar-dark">
+                <a href="/" class="navbar-brand mx-4 mb-3">
+                    <h3 class="text-primary"><i class="fa fa-user-edit me-2"></i>AWS-AHP-01</h3>
+                </a>
+                <div class="navbar-nav w-100">
+                    <a href="/" class="nav-item nav-link"><i class="fa fa-tachometer-alt me-2"></i>Beranda</a>
+                </div>
+                <div class="navbar-nav w-100">
+                    <a href="{% url 'data_log' %}" class="nav-item nav-link active"><i class="fa fa-database me-2"></i>Data Log</a>
+                </div>
+                <div class="navbar-nav w-100">
+                    <a href="#" class="nav-item nav-link"><i class="fa fa-image me-2"></i>Gambar Hama</a>
+                </div>
+                <div class="navbar-nav w-100">
+                    <a href="#" class="nav-item nav-link"><i class="fa fa-camera me-2"></i>Periksa Webcam</a>
+                </div>
+            </nav>
+        </div>
+        <!-- Sidebar End -->
+
+        <!-- Content Start -->
+        <div class="content">
+            <!-- Navbar Start -->
+            <nav class="navbar navbar-expand bg-secondary navbar-dark sticky-top px-4 py-0">
+                <a href="/" class="navbar-brand d-flex d-lg-none me-4">
+                    <h2 class="text-primary mb-0"><i class="fa fa-user-edit"></i></h2>
+                </a>
+                <a href="#" class="sidebar-toggler flex-shrink-0">
+                    <i class="fa fa-bars"></i>
+                </a>
+                
+                <div class="navbar-nav align-items-center ms-auto">
+                    <!-- Desktop view - show all metrics -->
+                    <div class="nav-item me-3 d-none d-lg-block">
+                        <span class="navbar-text">
+                            <i class="fa fa-microchip me-1"></i>
+                            CPU: <span id="cpu_usage" class="text-info">{{ latest_system_data.cpu_percent|default:"0" }}%</span>
+                        </span>
+                    </div>
+                    <div class="nav-item me-3 d-none d-lg-block">
+                        <span class="navbar-text">
+                            <i class="fa fa-memory me-1"></i>
+                            RAM: <span id="ram_usage" class="text-warning">{{ latest_system_data.ram_percent|default:"0" }}%</span>
+                        </span>
+                    </div>
+                    <div class="nav-item me-3 d-none d-lg-block">
+                        <span class="navbar-text">
+                            <i class="fa fa-hdd me-1"></i>
+                            Storage: <span id="storage_usage" class="text-primary">{{ latest_system_data.storage_percent|default:"0" }}%</span>
+                        </span>
+                    </div>
+                    <div class="nav-item me-3 d-none d-lg-block">
+                        <span class="navbar-text">
+                            <i class="fas fa-temperature-high me-1"></i>
+                            Suhu Alat: <span id="cpu_temp" class="text-danger">{{ latest_system_data.cpu_temp|default:"0" }}°C</span>
+                        </span>
+                    </div>
+                    <div class="nav-item me-3 d-none d-lg-block">
+                        <span class="navbar-text">
+                            <i class="fa fa-battery-three-quarters me-1"></i>
+                            Battery: <span id="battery_level" class="text-success">{{ latest_system_data.battery_level|default:"0" }}%</span>
+                        </span>
+                    </div>
+                    
+                    <!-- Mobile view - show only essential metrics -->
+                    <div class="nav-item me-2 d-lg-none">
+                        <span class="navbar-text">
+                            <i class="fa fa-battery-three-quarters me-1"></i>
+                            <span id="battery_level_mobile" class="text-success">{{ latest_system_data.battery_level|default:"0" }}%</span>
+                        </span>
+                    </div>
+                    <div class="nav-item me-2 d-lg-none">
+                        <span class="navbar-text">
+                            <i class="fa fa-wifi me-1"></i>
+                            <span id="status_mobile" class="text-success">{{ latest_data.status|default:"Online" }}</span>
+                        </span>
+                    </div>
+                    
+                    <!-- Desktop view - show status -->
+                    <div class="nav-item me-3 d-none d-lg-block">
+                        <span class="navbar-text">
+                            <i class="fa fa-wifi me-1"></i>
+                            Status: <span id="status" class="text-success">{{ latest_data.status|default:"Online" }}</span>
+                        </span>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                            <img class="rounded-circle me-lg-2" src="{% static 'img/user.jpg' %}" alt="" style="width: 40px; height: 40px;">
+                            <span class="d-none d-lg-inline-flex">Admin</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end bg-secondary border-0 rounded-0 rounded-bottom m-0">
+                            <a href="#" class="dropdown-item">Pengaturan</a>
+                            <a href="{% url 'logout' %}" class="dropdown-item">Keluar</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <!-- Navbar End -->
+
+            <!-- Data Log Content Start -->
+            <div class="container-fluid pt-4 px-4">
+                <div class="bg-secondary rounded p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <h4 class="mb-0">Data Log Monitoring</h4>
+                        <div>
+                            <span class="badge bg-primary me-2">Total: {{ total_records }} records</span>
+                        </div>
+                    </div>
+
+                    <!-- Filters Start -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <form method="get" class="row g-3">
+                                <div class="col-md-2">
+                                    <label for="type" class="form-label">Data Type</label>
+                                    <select class="form-select" id="type" name="type">
+                                        <option value="sensor" {% if data_type == 'sensor' %}selected{% endif %}>Sensor Data</option>
+                                        <option value="system" {% if data_type == 'system' %}selected{% endif %}>System Data</option>
+                                        <option value="detection" {% if data_type == 'detection' %}selected{% endif %}>Detection Data</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="period" class="form-label">Period</label>
+                                    <select class="form-select" id="period" name="period">
+                                        <option value="7" {% if period == '7' %}selected{% endif %}>7 Hari</option>
+                                        <option value="14" {% if period == '14' %}selected{% endif %}>14 Hari</option>
+                                        <option value="30" {% if period == '30' %}selected{% endif %}>30 Hari</option>
+                                        <option value="all" {% if period == 'all' %}selected{% endif %}>All Time</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="start_date" class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="end_date" class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="search" class="form-label">Search</label>
+                                    <input type="text" class="form-control" id="search" name="search" value="{{ search }}" placeholder="Search timestamp or status...">
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary me-2">
+                                        <i class="fa fa-search me-1"></i>Filter
+                                    </button>
+                                    <a href="{% url 'data_log' %}" class="btn btn-secondary">
+                                        <i class="fa fa-refresh me-1"></i>Reset
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Filters End -->
+
+                    <!-- Download Buttons Start -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'download_csv' %}?type={{ data_type }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}&search={{ search }}" 
+                                   class="btn btn-success">
+                                    <i class="fa fa-download me-1"></i>Download {{ data_type|title }} CSV
+                                </a>
+                                <a href="{% url 'download_all_csv' %}?period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}&search={{ search }}" 
+                                   class="btn btn-info">
+                                    <i class="fa fa-download me-1"></i>Download All Data (ZIP)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Download Buttons End -->
+
+                    <!-- Data Table Start -->
+                    <div class="table-responsive">
+                        {% if data_type == 'sensor' %}
+                            <table class="table text-start align-middle table-bordered table-hover mb-0">
+                                <thead>
+                                    <tr class="text-white">
+                                        <th scope="col">No</th>
+                                        <th scope="col">Timestamp</th>
+                                        <th scope="col">Temperature (°C)</th>
+                                        <th scope="col">Humidity (%)</th>
+                                        <th scope="col">Rainfall (mm)</th>
+                                        <th scope="col">Thunder</th>
+                                        <th scope="col">Pest Count</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Latitude</th>
+                                        <th scope="col">Longitude</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in page_obj %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ item.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                        <td>{{ item.temperature|default:"-" }}</td>
+                                        <td>{{ item.humidity|default:"-" }}</td>
+                                        <td>{{ item.rainfall|default:"-" }}</td>
+                                        <td>{{ item.thunder|default:"-" }}</td>
+                                        <td>{{ item.pest_count|default:"-" }}</td>
+                                    
+                                        <td>
+                                            <span class="badge {% if item.status == 'Online' %}bg-success{% else %}bg-danger{% endif %}">
+                                                {{ item.status|default:"-" }}
+                                            </span>
+                                        </td>
+                                        <td>{{ item.latitude|default:"-" }}</td>
+                                        <td>{{ item.longitude|default:"-" }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="12" class="text-center">No data found</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% elif data_type == 'system' %}
+                            <table class="table text-start align-middle table-bordered table-hover mb-0">
+                                <thead>
+                                    <tr class="text-white">
+                                        <th scope="col">No</th>
+                                        <th scope="col">Timestamp</th>
+                                        <th scope="col">CPU %</th>
+                                        <th scope="col">RAM %</th>
+                                        <th scope="col">RAM Used (GB)</th>
+                                        <th scope="col">RAM Total (GB)</th>
+                                        <th scope="col">Storage %</th>
+                                        <th scope="col">Storage Used (GB)</th>
+                                        <th scope="col">Storage Total (GB)</th>
+                                        <th scope="col">Network Sent (MB)</th>
+                                        <th scope="col">Network Received (MB)</th>
+                                        <th scope="col">Load 1min</th>
+                                        <th scope="col">CPU Temp (°C)</th>
+                                        <th scope="col">Battery Level (%)</th>
+                                        <th scope="col">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in page_obj %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ item.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                        <td>{{ item.cpu_percent|default:"-" }}</td>
+                                        <td>{{ item.ram_percent|default:"-" }}</td>
+                                        <td>{{ item.ram_used_gb|default:"-" }}</td>
+                                        <td>{{ item.ram_total_gb|default:"-" }}</td>
+                                        <td>{{ item.storage_percent|default:"-" }}</td>
+                                        <td>{{ item.storage_used_gb|default:"-" }}</td>
+                                        <td>{{ item.storage_total_gb|default:"-" }}</td>
+                                        <td>{{ item.network_sent_mb|default:"-" }}</td>
+                                        <td>{{ item.network_recv_mb|default:"-" }}</td>
+                                        <td>{{ item.load_1min|default:"-" }}</td>
+                                        <td>{{ item.cpu_temp|default:"-" }}</td>
+                                        <td>{{ item.battery_level|default:"-" }}</td>
+                                        <td>
+                                            <span class="badge {% if item.status == 'Online' %}bg-success{% else %}bg-danger{% endif %}">
+                                                {{ item.status|default:"-" }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="15" class="text-center">No data found</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% elif data_type == 'detection' %}
+                            <table class="table text-start align-middle table-bordered table-hover mb-0">
+                                <thead>
+                                    <tr class="text-white">
+                                        <th scope="col">No</th>
+                                        <th scope="col">Timestamp</th>
+                                        <th scope="col">Total Detections</th>
+                                        <th scope="col">Class Counts</th>
+                                        <th scope="col">Detection Details</th>
+                                        <th scope="col">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in page_obj %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ item.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                        <td>{{ item.total_detections|default:"-" }}</td>
+                                        <td>
+                                            {% if item.class_counts %}
+                                                <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#classCountsModal{{ item.id }}">
+                                                    View Details
+                                                </button>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if item.detection_details %}
+                                                <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#detectionDetailsModal{{ item.id }}">
+                                                    View Details
+                                                </button>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if item.status == 'Completed' %}bg-success{% else %}bg-warning{% endif %}">
+                                                {{ item.status|default:"-" }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No data found</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    </div>
+                    <!-- Data Table End -->
+
+                    <!-- Pagination Start -->
+                    {% if page_obj.has_other_pages %}
+                    <div class="d-flex justify-content-center mt-4">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1&type={{ data_type }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}&search={{ search }}">First</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&type={{ data_type }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}&search={{ search }}">Previous</a>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}&type={{ data_type }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}&search={{ search }}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&type={{ data_type }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}&search={{ search }}">Next</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&type={{ data_type }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}&search={{ search }}">Last</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                    <!-- Pagination End -->
+
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} entries
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <!-- Data Log Content End -->
+
+            <!-- Footer Start -->
+            <div class="container-fluid pt-4 px-4">
+                <div class="bg-secondary rounded-top p-4">
+                    <div class="row">
+                        <div class="col-12 col-sm-6 text-center text-sm-start">
+                            &copy; <a href="#">Politeknik Negeri Indramayu</a> 2025
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Footer End -->
+
+        </div>
+        <!-- Content End -->
+
+        <!-- Back to Top -->
+        <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+    </div>
+
+    <!-- Modals for Detection Data Details -->
+    {% if data_type == 'detection' %}
+        {% for item in page_obj %}
+            {% if item.class_counts %}
+            <!-- Class Counts Modal -->
+            <div class="modal fade" id="classCountsModal{{ item.id }}" tabindex="-1" aria-labelledby="classCountsModalLabel{{ item.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content bg-secondary">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="classCountsModalLabel{{ item.id }}">Class Counts - {{ item.timestamp|date:"Y-m-d H:i:s" }}</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <pre class="text-light">{{ item.class_counts|pprint }}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if item.detection_details %}
+            <!-- Detection Details Modal -->
+            <div class="modal fade" id="detectionDetailsModal{{ item.id }}" tabindex="-1" aria-labelledby="detectionDetailsModalLabel{{ item.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content bg-secondary">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="detectionDetailsModalLabel{{ item.id }}">Detection Details - {{ item.timestamp|date:"Y-m-d H:i:s" }}</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <pre class="text-light">{{ item.detection_details|pprint }}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'lib/easing/easing.min.js' %}"></script>
+    <script src="{% static 'lib/waypoints/waypoints.min.js' %}"></script>
+    <script src="{% static 'lib/owlcarousel/owl.carousel.min.js' %}"></script>
+    <script src="{% static 'lib/tempusdominus/js/moment.min.js' %}"></script>
+    <script src="{% static 'lib/tempusdominus/js/moment-timezone.min.js' %}"></script>
+    <script src="{% static 'lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+
+    <script>
+        // Auto-submit form when data type changes
+        document.getElementById('type').addEventListener('change', function() {
+            this.form.submit();
+        });
+
+        function updateSystemData() {
+            fetch('/api/system-data/')
+                .then(response => response.json())
+                .then(data => {
+                    // Update navbar system metrics
+                    document.getElementById('cpu_usage').textContent = data.cpu_percent + '%';
+                    document.getElementById('ram_usage').textContent = data.ram_percent + '%';
+                    document.getElementById('storage_usage').textContent = data.storage_percent + '%';
+                    document.getElementById('cpu_temp').textContent = data.cpu_temp + '°C';
+                    
+                    // Update system details if they exist
+                    if (document.getElementById('cpu-detail')) {
+                        document.getElementById('cpu-detail').textContent = data.cpu_percent + '%';
+                        document.getElementById('ram-detail').textContent = data.ram_percent + '%';
+                        document.getElementById('storage-detail').textContent = data.storage_percent + '%';
+                        document.getElementById('ram-used').textContent = data.ram_used_gb.toFixed(1);
+                        document.getElementById('ram-total').textContent = data.ram_total_gb.toFixed(1);
+                        document.getElementById('storage-used').textContent = data.storage_used_gb.toFixed(1);
+                        document.getElementById('storage-total').textContent = data.storage_total_gb.toFixed(1);
+                        document.getElementById('network-sent').textContent = data.network_sent_mb.toFixed(1);
+                        document.getElementById('network-recv').textContent = data.network_recv_mb.toFixed(1);
+                        document.getElementById('load-1min').textContent = data.load_1min.toFixed(2);
+                        document.getElementById('system-timestamp').textContent = data.timestamp;
+                    }
+                    
+                    // Update chart if available
+                    if (typeof systemChart !== 'undefined' && systemChart) {
+                        const now = new Date().toLocaleTimeString();
+                        systemChart.data.labels.push(now);
+                        systemChart.data.datasets[0].data.push(data.cpu_percent);
+                        systemChart.data.datasets[1].data.push(data.ram_percent);
+                        systemChart.data.datasets[2].data.push(data.storage_percent);
+                        
+                        // Keep only last 20 data points
+                        if (systemChart.data.labels.length > 20) {
+                            systemChart.data.labels.shift();
+                            systemChart.data.datasets[0].data.shift();
+                            systemChart.data.datasets[1].data.shift();
+                            systemChart.data.datasets[2].data.shift();
+                        }
+                        
+                        systemChart.update();
+                    }
+                })
+                .catch(error => console.error('Error fetching system data:', error));
+        }
+
+        function updateSensorData() {
+            fetch('/api/latest-data/')
+                .then(response => response.json())
+                .then(data => {
+                    // Update navbar sensor metrics
+                    document.getElementById('battery_level').textContent = data.battery_level + '%';
+                    document.getElementById('battery_level_mobile').textContent = data.battery_level + '%';
+                    document.getElementById('status').textContent = data.status;
+                    document.getElementById('status_mobile').textContent = data.status;
+                })
+                .catch(error => console.error('Error fetching sensor data:', error));
+        }
+
+        // Update data every 30 seconds
+        setInterval(updateSystemData, 30000);
+        setInterval(updateSensorData, 30000);
+
+        // Initial update
+        updateSystemData();
+        updateSensorData();
+    </script>
+
+</body>
+</html> 

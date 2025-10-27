@@ -1,0 +1,805 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Monitoring Alat Hama</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="" name="keywords">
+    <meta content="" name="description">
+    <link href="{% static 'img/favicon.ico'%}" rel="icon">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@500;700&display=swap" rel="stylesheet"> 
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{% static 'lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
+    <link href="{% static 'lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container-fluid position-relative d-flex p-0">
+        
+        <!-- Spinner Start -->
+        <div id="spinner" class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <!-- Spinner End -->
+
+        <!-- Sidebar Start -->
+        <div class="sidebar pe-4 pb-3">
+            <nav class="navbar bg-secondary navbar-dark">
+                <a href="/" class="navbar-brand mx-4 mb-3">
+                    <h3 class="text-primary"><i class="fa fa-user-edit me-2"></i>AWS-AHP-01</h3>
+                </a>
+                <div class="navbar-nav w-100">
+                    <a href="/" class="nav-item nav-link active"><i class="fa fa-tachometer-alt me-2"></i>Beranda</a>
+                </div>
+                <div class="navbar-nav w-100">
+                    <a href="{% url 'data_log' %}" class="nav-item nav-link"><i class="fa fa-database me-2"></i>Data Log</a>
+                </div>
+                <div class="navbar-nav w-100">
+                    <a href="#" class="nav-item nav-link"><i class="fa fa-image me-2"></i>Gambar Hama</a>
+                </div>
+                <div class="navbar-nav w-100">
+                    <a href="{% url 'detection' %}" class="nav-item nav-link"><i class="fa fa-camera me-2"></i>Deteksi Hama</a>
+                </div>
+            </nav>
+        </div>
+        <!-- Sidebar End -->
+
+        <!-- Content Start -->
+        <div class="content">
+            <!-- Navbar Start -->
+            <nav class="navbar navbar-expand bg-secondary navbar-dark sticky-top px-4 py-0">
+                <a href="/" class="navbar-brand d-flex d-lg-none me-4">
+                    <h2 class="text-primary mb-0"><i class="fa fa-user-edit"></i></h2>
+                </a>
+                <a href="#" class="sidebar-toggler flex-shrink-0">
+                    <i class="fa fa-bars"></i>
+                </a>
+                
+                <div class="navbar-nav align-items-center ms-auto">
+                    <!-- Desktop view - show all metrics -->
+                    <div class="nav-item me-3 d-none d-lg-block">
+                        <span class="navbar-text">
+                            <i class="fa fa-microchip me-1"></i>
+                            CPU: <span id="cpu_usage" class="text-info">{{ latest_system_data.cpu_percent|default:"0" }}%</span>
+                        </span>
+                    </div>
+                    <div class="nav-item me-3 d-none d-lg-block">
+                        <span class="navbar-text">
+                            <i class="fa fa-memory me-1"></i>
+                            RAM: <span id="ram_usage" class="text-warning">{{ latest_system_data.ram_percent|default:"0" }}%</span>
+                        </span>
+                    </div>
+                    <div class="nav-item me-3 d-none d-lg-block">
+                        <span class="navbar-text">
+                            <i class="fa fa-hdd me-1"></i>
+                            Storage: <span id="storage_usage" class="text-primary">{{ latest_system_data.storage_percent|default:"0" }}%</span>
+                        </span>
+                    </div>
+                    <div class="nav-item me-3 d-none d-lg-block">
+                        <span class="navbar-text">
+                            <i class="fas fa-temperature-high me-1"></i>
+                            Suhu Alat: <span id="cpu_temp" class="text-danger">{{ latest_system_data.cpu_temp|default:"0" }}°C</span>
+                        </span>
+                    </div>
+                    <div class="nav-item me-3 d-none d-lg-block">
+                        <span class="navbar-text">
+                            <i class="fa fa-battery-three-quarters me-1"></i>
+                            Battery: <span id="battery_level" class="text-success">{{ latest_system_data.battery_level|default:"0" }}%</span>
+                        </span>
+                    </div>
+                    
+                    <!-- Mobile view - show only essential metrics -->
+                    <div class="nav-item me-2 d-lg-none">
+                        <span class="navbar-text">
+                            <i class="fa fa-battery-three-quarters me-1"></i>
+                            <span id="battery_level_mobile" class="text-success">{{ latest_system_data.battery_level|default:"0" }}%</span>
+                        </span>
+                    </div>
+                    <div class="nav-item me-2 d-lg-none">
+                        <span class="navbar-text">
+                            <i class="fa fa-wifi me-1"></i>
+                            <span id="status_mobile" class="text-success">{{ latest_data.status|default:"Online" }}</span>
+                        </span>
+                    </div>
+                    
+                    <!-- Desktop view - show status -->
+                    <div class="nav-item me-3 d-none d-lg-block">
+                        <span class="navbar-text">
+                            <i class="fa fa-wifi me-1"></i>
+                            Status: <span id="status" class="text-success">{{ latest_data.status|default:"Online" }}</span>
+                        </span>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                            <img class="rounded-circle me-lg-2" src="{% static 'img/user.jpg' %}" alt="" style="width: 40px; height: 40px;">
+                            <span class="d-none d-lg-inline-flex">Admin</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end bg-secondary border-0 rounded-0 rounded-bottom m-0">
+                            <a href="#" class="dropdown-item">Pengaturan</a>
+                            <a href="{% url 'logout' %}" class="dropdown-item">Keluar</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <!-- Navbar End -->
+
+            <!-- Sensor and System Stats Start -->
+            <div class="container-fluid pt-4 px-4">
+                <div class="row g-4">
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-secondary rounded d-flex align-items-center justify-content-around p-4">
+                            <i class="fa fa-thermometer-half fa-3x text-primary"></i>
+                            <div class="ms-3">
+                                <p class="mb-2">Suhu</p>
+                                <h6 class="mb-0" id="temperature">{{ latest_data.temperature|default:"0" }}°C</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-secondary rounded d-flex align-items-center justify-content-around p-4">
+                            <i class="fa fa-water fa-3x text-primary"></i>
+                            <div class="ms-3">
+                                <p class="mb-2">Kelembaban</p>
+                                <h6 class="mb-0" id="humidity">{{ latest_data.humidity|default:"0" }}%</h6>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-secondary rounded d-flex align-items-center justify-content-around p-4">
+                            <i class="fa fa-cloud-rain fa-3x text-primary"></i>
+                            <div class="ms-3">
+                                <p class="mb-2">Hujan</p>
+                                <h6 class="mb-0" id="rainfall">{{ latest_data.rainfall|default:"0" }}mm</h6>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-secondary rounded d-flex align-items-center justify-content-around p-4">
+                            <i class="fa fa-bolt fa-3x text-primary"></i>
+                            <div class="ms-3">
+                                <p class="mb-2">Petir</p>
+                                <h6 class="mb-0" id="thunder">{{ latest_data.thunder|default:"0" }}</h6>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-secondary rounded d-flex align-items-center justify-content-around p-4">
+                            <i class="fa fa-bug fa-3x text-primary"></i>
+                            <div class="ms-3">
+                                <p class="mb-2">Hama</p>
+                                <h6 class="mb-0" id="pest_count">{{ latest_data.pest_count|default:"0" }}</h6>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    
+
+
+                </div>
+            </div>
+            <!-- Sale & Revenue End -->
+
+            <!-- Widgets Start -->
+            <div class="container-fluid pt-4 px-4">
+                <div class="row g-4">
+
+                    <div class="col-sm-12 col-md-6 col-xl-4">
+                        <div class="h-100 bg-secondary rounded p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <h6 class="mb-0">Kalender</h6>
+                                <!-- <a href="">Show All</a> -->
+                            </div>
+                            <div id="calender"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12 col-md-6 col-xl-8">
+                        <div class="h-100 bg-secondary rounded p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h6 class="mb-0">Notifikasi</h6>
+                            </div>
+                            
+                            <div class="d-flex align-items-center border-bottom py-3">
+                                <img class="rounded-circle flex-shrink-0" src="{% static 'img/user.jpg' %}" alt="" style="width: 40px; height: 40px;">
+                                <div class="w-100 ms-3">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-0">Sistem</h6>
+                                        <small>1 minutes ago</small>
+                                    </div>
+                                    <span>Terdeteksi Petir pada radius sekitar 20 Meter.</span> 
+                                    <span class="text-danger">Sistem akan mematikan akses internet pada alat sementara selama 30 menit.</span>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>    
+                </div>
+            </div>
+            <!-- Widgets End -->
+
+            <!-- Sales Chart Start -->
+            <div class="container-fluid pt-4 px-4">
+                <div class="row g-4">
+                    
+                    <div class="col-sm-12 col-xl-6">
+                        <div class="bg-secondary text-center rounded p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <h6 class="mb-0">Statistik Hama</h6>
+                                <div>
+                                    <select id="detection-period" class="form-select form-select-sm d-inline-block w-auto me-2">
+                                        <option value="7">7 Hari</option>
+                                        <option value="14">14 Hari</option>
+                                        <option value="30">30 Hari</option>
+                                        <option value="90">3 Bulan</option>
+                                        <option value="365">1 Tahun</option>
+                                    </select>
+                                    <a href="#" onclick="refreshDetectionChart()">Refresh</a>
+                                </div>
+                            </div>
+                            <canvas id="pest-detection-chart"></canvas>
+                            <div class="mt-3">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <small class="text-muted">Total Deteksi:</small>
+                                        <div id="total-detections">0</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Total Hama:</small>
+                                        <div id="total-pests">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12 col-xl-6">
+                        <div class="bg-secondary rounded h-100 p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <h6 class="mb-0">Lokasi Alat</h6>
+                                <small id="location-timestamp">No location data</small>
+                            </div>
+                            <div id="map" class="position-relative rounded w-100" style="height: 300px; border: 1px solid #444;">
+                                <div id="map-placeholder" class="d-flex align-items-center justify-content-center h-100">
+                                    <div class="text-center">
+                                        <i class="fa fa-map-marker fa-3x text-primary mb-3"></i>
+                                        <p class="mb-0">Waiting for location data...</p>
+                                        <small class="text-muted">Location will appear when MQTT data is received</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <small class="text-muted">Latitude:</small>
+                                        <div id="latitude-display">--</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Longitude:</small>
+                                        <div id="longitude-display">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Sales Chart End -->
+
+            <!-- System Monitoring Chart Start -->
+            <div class="container-fluid pt-4 px-4">
+                <div class="row g-4">
+                    <div class="col-sm-12 col-xl-8">
+                        <div class="bg-secondary text-center rounded p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <h6 class="mb-0">System Performance</h6>
+                                <small id="system-timestamp">No system data</small>
+                            </div>
+                            <canvas id="system-performance"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-xl-4">
+                        <div class="bg-secondary rounded h-100 p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <h6 class="mb-0">System Details</h6>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted">CPU Usage:</small>
+                                <div class="d-flex justify-content-between">
+                                    <span id="cpu-detail">0%</span>
+                                    <small class="text-muted">Load: <span id="load-1min">0</span></small>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted">RAM Usage:</small>
+                                <div class="d-flex justify-content-between">
+                                    <span id="ram-detail">0%</span>
+                                    <small class="text-muted"><span id="ram-used">0</span>GB / <span id="ram-total">0</span>GB</small>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted">Storage Usage:</small>
+                                <div class="d-flex justify-content-between">
+                                    <span id="storage-detail">0%</span>
+                                    <small class="text-muted"><span id="storage-used">0</span>GB / <span id="storage-total">0</span>GB</small>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted">Network I/O:</small>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">↑ <span id="network-sent">0</span>MB</small>
+                                    <small class="text-muted">↓ <span id="network-recv">0</span>MB</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- System Monitoring Chart End -->
+
+
+
+            <!-- Footer Start -->
+            <div class="container-fluid pt-4 px-4">
+                <div class="bg-secondary rounded-top p-4">
+                    <div class="row">
+                        <div class="col-12 col-sm-6 text-center text-sm-start">
+                            &copy; <a href="#">Politeknik Negeri Indramayu</a> 2025
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Footer End -->
+
+        </div>
+        <!-- Content End -->
+
+
+        <!-- Back to Top -->
+        <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'lib/chart/chart.min.js' %}"></script>
+    <script src="{% static 'lib/easing/easing.min.js' %}"></script>
+    <script src="{% static 'lib/waypoints/waypoints.min.js' %}"></script>
+    <script src="{% static 'lib/owlcarousel/owl.carousel.min.js' %}"></script>
+    <script src="{% static 'lib/tempusdominus/js/moment.min.js' %}"></script>
+    <script src="{% static 'lib/tempusdominus/js/moment-timezone.min.js' %}"></script>
+    <script src="{% static 'lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+
+    <!-- Add JavaScript for real-time updates -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <script>
+    let map = null;
+    let marker = null;
+    let defaultLocation = { lat: -6.2088, lng: 106.8456 }; // Jakarta, Indonesia as default
+    let systemChart = null;
+    let pestDetectionChart = null;
+    let updateIntervals = []; // Store intervals for cleanup
+
+    // Add missing format_timestamp_local function
+    function format_timestamp_local(timestamp) {
+        if (!timestamp || timestamp === 'No data') {
+            return 'No data';
+        }
+        try {
+            const date = new Date(timestamp);
+            if (isNaN(date.getTime())) {
+                return 'Invalid date';
+            }
+            // Format as Jakarta timezone (UTC+7)
+            return date.toLocaleString('id-ID', {
+                timeZone: 'Asia/Jakarta',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        } catch (error) {
+            console.error('Error formatting timestamp:', error);
+            return 'Invalid date';
+        }
+    }
+
+    // Safe DOM update function to prevent XSS
+    function safeUpdateElement(id, value, suffix = '') {
+        const element = document.getElementById(id);
+        if (element) {
+            // Sanitize the value to prevent XSS
+            const sanitizedValue = String(value || 0).replace(/[<>]/g, '');
+            element.textContent = sanitizedValue + suffix;
+        }
+    }
+
+    // Safe HTML update function
+    function safeUpdateHTML(id, html) {
+        const element = document.getElementById(id);
+        if (element) {
+            // Basic HTML sanitization
+            const sanitizedHTML = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+            element.innerHTML = sanitizedHTML;
+        }
+    }
+
+    function initMap() {
+        // Initialize the map
+        map = L.map('map').setView(defaultLocation, 13);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Add a default marker
+        marker = L.marker(defaultLocation).addTo(map);
+        marker.bindPopup("<b>Device Location</b><br>Waiting for GPS data...").openPopup();
+    }
+
+    function initSystemChart() {
+        const ctx = document.getElementById('system-performance');
+        if (ctx) {
+            systemChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'CPU %',
+                        data: [],
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        tension: 0.1
+                    }, {
+                        label: 'RAM %',
+                        data: [],
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        tension: 0.1
+                    }, {
+                        label: 'Storage %',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function initPestDetectionChart() {
+        const ctx = document.getElementById('pest-detection-chart');
+        if (ctx) {
+            pestDetectionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Jumlah Hama'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tanggal'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Statistik Deteksi Hama'
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function updateMapLocation(latitude, longitude) {
+        if (!map) {
+            initMap();
+        }
+        
+        const newLocation = { lat: parseFloat(latitude), lng: parseFloat(longitude) };
+        
+        // Update marker position
+        marker.setLatLng(newLocation);
+        
+        // Update map view to center on new location
+        map.setView(newLocation, 15);
+        
+        // Update popup content
+        marker.bindPopup(`
+            <b>Device Location</b><br>
+            <strong>Lat:</strong> ${latitude}<br>
+            <strong>Lng:</strong> ${longitude}<br>
+            <small>Last updated: ${new Date().toLocaleTimeString()}</small>
+        `).openPopup();
+        
+        // Update coordinate displays
+        document.getElementById('latitude-display').textContent = latitude;
+        document.getElementById('longitude-display').textContent = longitude;
+        
+        // Hide placeholder
+        document.getElementById('map-placeholder').style.display = 'none';
+    }
+
+    function updateSensorData() {
+        fetch('/api/latest-data/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Use safe update functions to prevent XSS
+                safeUpdateElement('temperature', data.temperature, '°C');
+                safeUpdateElement('humidity', data.humidity, '%');
+                safeUpdateElement('rainfall', data.rainfall, 'mm');
+                safeUpdateElement('thunder', data.thunder);
+                safeUpdateElement('pest_count', data.pest_count);
+                safeUpdateElement('cpu_usage', data.system_cpu_percent, '%');
+                safeUpdateElement('ram_usage', data.system_ram_percent, '%');
+                safeUpdateElement('storage_usage', data.system_storage_percent, '%');
+                safeUpdateElement('battery_level', data.battery_level, '%');
+                safeUpdateElement('battery_level_mobile', data.battery_level, '%');
+                safeUpdateElement('status', data.status);
+                
+                // Update map if location data is available
+                if (data.has_location && data.latitude && data.longitude) {
+                    updateMapLocation(data.latitude, data.longitude);
+                    safeUpdateElement('location-timestamp', format_timestamp_local(data.timestamp));
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching sensor data:', error);
+                // Show error indicator
+                safeUpdateElement('status', 'Error');
+                safeUpdateElement('status_mobile', 'Error');
+            });
+    }
+
+    function updateSystemData() {
+        fetch('/api/system-data/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Update system details with safe functions
+                safeUpdateElement('cpu-detail', data.cpu_percent, '%');
+                safeUpdateElement('ram-detail', data.ram_percent, '%');
+                safeUpdateElement('storage-detail', data.storage_percent, '%');
+                safeUpdateElement('ram-used', data.ram_used_gb.toFixed(1));
+                safeUpdateElement('ram-total', data.ram_total_gb.toFixed(1));
+                safeUpdateElement('storage-used', data.storage_used_gb.toFixed(1));
+                safeUpdateElement('storage-total', data.storage_total_gb.toFixed(1));
+                safeUpdateElement('network-sent', data.network_sent_mb.toFixed(1));
+                safeUpdateElement('network-recv', data.network_recv_mb.toFixed(1));
+                safeUpdateElement('load-1min', data.load_1min.toFixed(2));
+                safeUpdateElement('system-timestamp', format_timestamp_local(data.timestamp));
+                safeUpdateElement('cpu_temp', data.cpu_temp, '°C');
+                
+                // Update chart if available
+                if (systemChart && typeof systemChart.data !== 'undefined') {
+                    const now = new Date().toLocaleTimeString();
+                    systemChart.data.labels.push(now);
+                    systemChart.data.datasets[0].data.push(data.cpu_percent);
+                    systemChart.data.datasets[1].data.push(data.ram_percent);
+                    systemChart.data.datasets[2].data.push(data.storage_percent);
+                    
+                    // Keep only last 20 data points
+                    if (systemChart.data.labels.length > 20) {
+                        systemChart.data.labels.shift();
+                        systemChart.data.datasets[0].data.shift();
+                        systemChart.data.datasets[1].data.shift();
+                        systemChart.data.datasets[2].data.shift();
+                    }
+                    
+                    systemChart.update('none'); // Use 'none' mode for better performance
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching system data:', error);
+                // Show error indicator
+                safeUpdateElement('cpu-detail', 'Error');
+                safeUpdateElement('ram-detail', 'Error');
+                safeUpdateElement('storage-detail', 'Error');
+            });
+    }
+
+    function updateLocationData() {
+        fetch('/api/location-data/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.latitude && data.longitude) {
+                    updateMapLocation(data.latitude, data.longitude);
+                    safeUpdateElement('location-timestamp', format_timestamp_local(data.timestamp));
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching location data:', error);
+            });
+    }
+
+    function updateDetectionData() {
+        fetch('/api/latest-detection/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Update pest count in the main stats
+                safeUpdateElement('pest_count', data.total_detections);
+                
+                // Update detection summary if available
+                if (data.class_counts && Object.keys(data.class_counts).length > 0) {
+                    let summaryText = '';
+                    for (const [pestClass, count] of Object.entries(data.class_counts)) {
+                        summaryText += `${pestClass}: ${count}, `;
+                    }
+                    summaryText = summaryText.slice(0, -2); // Remove last comma
+                    console.log('Latest detection summary:', summaryText);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching detection data:', error);
+            });
+    }
+
+    function updateDetectionChart() {
+        const days = document.getElementById('detection-period')?.value || '7';
+        fetch(`/api/detection-statistics/?days=${days}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (pestDetectionChart && data.chart_data) {
+                    // Update chart data
+                    pestDetectionChart.data.labels = data.chart_data.labels;
+                    pestDetectionChart.data.datasets = data.chart_data.datasets;
+                    pestDetectionChart.update('none'); // Use 'none' mode for better performance
+                    
+                    // Update summary statistics
+                    safeUpdateElement('total-detections', data.summary.total_detections);
+                    safeUpdateElement('total-pests', data.summary.total_pests);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching detection statistics:', error);
+            });
+    }
+
+    function refreshDetectionChart() {
+        updateDetectionChart();
+        return false; // Prevent default link behavior
+    }
+
+    // Cleanup function to clear all intervals
+    function cleanupIntervals() {
+        updateIntervals.forEach(interval => clearInterval(interval));
+        updateIntervals = [];
+    }
+
+    // Remove any existing event listeners and add a new one
+    function setupDetectionPeriodListener() {
+        const periodSelector = document.getElementById('detection-period');
+        if (periodSelector) {
+            // Remove existing event listeners by cloning the element
+            const newSelector = periodSelector.cloneNode(true);
+            periodSelector.parentNode.replaceChild(newSelector, periodSelector);
+            
+            // Add new event listener
+            newSelector.addEventListener('change', function() {
+                updateDetectionChart();
+            });
+        }
+    }
+
+    // Initialize map when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            // Initialize map with default location
+            initMap();
+            
+            // Initialize system chart
+            initSystemChart();
+            
+            // Initialize pest detection chart
+            initPestDetectionChart();
+            
+            // Setup detection period listener
+            setupDetectionPeriodListener();
+            
+            // Initial updates
+            updateSensorData();
+            updateSystemData();
+            updateLocationData();
+            updateDetectionData();
+            updateDetectionChart();
+            
+            // Setup intervals with proper cleanup tracking
+            updateIntervals.push(setInterval(updateSensorData, 5000));
+            updateIntervals.push(setInterval(updateSystemData, 5000));
+            updateIntervals.push(setInterval(updateLocationData, 10000)); // Update location every 10 seconds
+            updateIntervals.push(setInterval(updateDetectionData, 10000)); // Update detection data every 10 seconds
+            updateIntervals.push(setInterval(updateDetectionChart, 30000)); // Update detection chart every 30 seconds
+            
+        } catch (error) {
+            console.error('Error during page initialization:', error);
+        }
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        cleanupIntervals();
+    });
+
+    // Cleanup on page visibility change (pause updates when tab is not visible)
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            // Page is hidden, could pause updates here if needed
+            console.log('Page hidden, updates continue in background');
+        } else {
+            // Page is visible again
+            console.log('Page visible, resuming normal updates');
+        }
+    });
+    </script>
+
+
+
+</body>
+</html>
